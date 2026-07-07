@@ -25,7 +25,5 @@ local.properties
 .settings/
 .loadpath
 .recommenders
-.classpath
-.project
 target/
 **/src/main/generated-sources/
