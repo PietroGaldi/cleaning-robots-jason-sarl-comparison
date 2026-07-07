@@ -7,6 +7,8 @@ The code was developed as part of the Symbolic and Distributed Artificial Intell
 The original source code for the cleaning robots implementation in Jason can be found at:
 https://github.com/jason-lang/jason/tree/main/examples/cleaning-robots
 
+Java Development Kit (JDK) used: Version 21
+
 ## Repository structure
 
 ```
