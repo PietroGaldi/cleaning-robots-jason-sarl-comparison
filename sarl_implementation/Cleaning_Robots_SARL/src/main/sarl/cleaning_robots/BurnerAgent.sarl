@@ -1,0 +1,21 @@
+package cleaning_robots
+
+import io.sarl.api.core.Behaviors
+import io.sarl.api.core.Initialize
+
+agent BurnerAgent{
+	uses Behaviors, Cleaning
+	
+	var ag: String
+	
+	on Initialize{
+		ag = occurrence.parameters.get(0) as String
+		setSkill(new CleaningSkill)
+	}
+	
+	on PerceptEvent{
+		if(occurrence.ag==ag && occurrence.hasGarbage){
+			burn()
+		}
+	}
+}

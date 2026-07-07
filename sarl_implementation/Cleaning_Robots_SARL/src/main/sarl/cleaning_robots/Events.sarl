@@ -1,0 +1,53 @@
+package cleaning_robots
+
+event PerceptEvent {
+	var ag : String
+	var x : int
+	var y : int
+	var hasGarbage : boolean
+	
+	new(ag:String, x:int, y:int, hasGarbage:boolean){
+		this.ag = ag
+		this.x = x
+		this.y = y
+		this.hasGarbage = hasGarbage
+	} 
+}
+
+event NextSlotEvent {
+	var ag : String
+	
+	new(ag:String){
+		this.ag = ag
+	}
+}
+
+event MoveTowardsEvent {
+	var ag : String
+	var x : int
+	var y : int
+	
+	new(ag:String, x:int, y:int){
+		this.ag = ag
+		this.x = x
+		this.y = y
+	}
+}
+
+event PickGarbEvent {
+	var ag : String
+
+	new(ag : String) {
+		this.ag = ag
+	}
+}
+
+event DropGarbEvent {
+	var ag : String
+
+	new(ag : String) {
+		this.ag = ag
+	}
+}
+
+event BurnGarbEvent

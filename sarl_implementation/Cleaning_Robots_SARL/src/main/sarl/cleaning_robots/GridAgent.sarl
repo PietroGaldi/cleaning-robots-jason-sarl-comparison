@@ -1,0 +1,193 @@
+package cleaning_robots
+import java.awt.Point
+import java.util.HashMap
+import java.util.ArrayList
+import java.util.Random
+import io.sarl.api.core.Initialize
+import io.sarl.api.core.DefaultContextInteractions
+import io.sarl.api.core.Logging
+
+final class GridConfig{
+	public static val GRID_WIDTH = 15
+	public static val GRID_HEIGHT = 15
+	public static val R2X = GRID_WIDTH/2
+	public static val R2Y = GRID_HEIGHT/2
+	
+}
+
+agent GridAgent{
+	uses DefaultContextInteractions, Logging
+	
+	val rx = new HashMap<String, Integer>
+	val ry = new HashMap<String, Integer>
+	val garbage = new ArrayList<Point>
+	val hasGarbage = new HashMap<String, Boolean>
+	val nerr = new HashMap<String, Integer>
+	val MErr = 2
+	val random = new Random
+	var startTime: long
+	var timerPrinted = false
+	
+	on Initialize{
+		startTime = System.nanoTime()
+		
+		rx.put("r1", 0)
+		ry.put("r1", 0)
+		rx.put("r2", GridConfig::R2X)
+		ry.put("r2", GridConfig::R2Y)
+		rx.put("r3", 5)
+		ry.put("r3", 0)
+		rx.put("r4", 10)
+		ry.put("r4", 0)
+
+		garbage.add(new Point(0, 2))
+		garbage.add(new Point(1, 6))
+		garbage.add(new Point(2, 10))
+		garbage.add(new Point(3, 13))
+		garbage.add(new Point(4, 4))
+		garbage.add(new Point(5, 1))
+		garbage.add(new Point(6, 5))
+		garbage.add(new Point(6, 14))
+		garbage.add(new Point(8, 9))
+		garbage.add(new Point(9, 12))
+		garbage.add(new Point(10, 1))
+		garbage.add(new Point(11, 4))
+		garbage.add(new Point(12, 8))
+		garbage.add(new Point(13, 11))
+		garbage.add(new Point(14, 14))
+		
+		hasGarbage.put("r1", false)
+		hasGarbage.put("r3", false)
+		hasGarbage.put("r4", false)
+		
+		nerr.put("r1", 0)
+		nerr.put("r3", 0)
+		nerr.put("r4", 0)
+	}
+	
+	def updatePercepts(ag: String){
+		var x = rx.get(ag)
+		var y = ry.get(ag)
+		emit(new PerceptEvent(ag, x, y, garbage.contains(new Point(x,y))))
+	}
+	
+	on NextSlotEvent{
+		var ag = occurrence.ag
+		info("[GridAgent] " + ag + " doing: next(slot)")
+		var agX = rx.get(ag)
+		var agY = ry.get(ag)
+		
+		var minX: int
+		var maxX: int
+		
+		if (ag.equals("r1")){
+			minX = 0
+			maxX = 4
+		}
+		else if (ag.equals("r3")) {
+			minX = 5
+			maxX = 9
+		}
+		else if (ag.equals("r4")) {
+			minX = 10
+			maxX = 14
+		}
+		else{
+			return
+		}
+		
+		agX++
+		if (agX > maxX){
+			agX = minX
+			agY++
+			if (agY >= GridConfig::GRID_HEIGHT){
+				agY = 0
+			}
+		}
+		
+		rx.put(ag, agX)
+		ry.put(ag, agY)
+
+		updatePercepts(ag)
+	}
+	
+	on MoveTowardsEvent{
+		var ag = occurrence.ag
+		var currX = occurrence.x
+		var currY = occurrence.y
+		info("[GridAgent] " + ag + " doing: move_towards("+currX+","+currY+")")
+		var agX = rx.get(ag)
+		var agY = ry.get(ag)
+		
+		if(agX < currX){
+			agX++
+			}
+		else if(agX > currX){
+			agX--
+		}
+		if (agY < currY) {
+			agY++
+		} else if (agY > currY) {
+			agY--
+		}
+		
+		rx.put(ag, agX)
+		ry.put(ag, agY)
+
+		updatePercepts(ag)
+	}
+	
+	on PickGarbEvent{
+		var ag = occurrence.ag
+		info("[GridAgent] " + ag + " doing: pick(garb)")
+		var agX = rx.get(ag)
+		var agY = ry.get(ag)
+		
+		if(garbage.contains(new Point(agX, agY))){
+			var err = nerr.get(ag)
+			if(random.nextBoolean() || err==MErr){
+				garbage.remove(new Point(agX, agY))
+				nerr.put(ag,0)
+				info("[GridAgent]"+ag+" picked up garbage")
+				hasGarbage.put(ag, true)
+				}
+			else {
+				info("[GridAgent]" + ag + " failed to pick up garbage ("+(err+1)+"/"+MErr+")")
+				nerr.put(ag, err+1)
+			}
+		}
+
+		updatePercepts(ag)
+	}
+	
+	on DropGarbEvent{
+		var ag = occurrence.ag
+		info("[GridAgent] " + ag + " doing: drop(garb)")
+		var agX = rx.get(ag)
+		var agY = ry.get(ag)
+		
+		if(hasGarbage.get(ag)){
+			hasGarbage.put(ag,false)
+			garbage.add(new Point(agX, agY))
+		}
+
+		updatePercepts(ag)
+		updatePercepts("r2")
+	}
+	
+	on BurnGarbEvent {
+		info("[GridAgent] r2 doing: burn(garb)")
+		var currP = new Point(rx.get("r2"), ry.get("r2"))
+		if (garbage.contains(currP)) {
+			info("[GridAgent] r2 burned garbage")
+			garbage.remove(currP)
+			
+			if(garbage.isEmpty() && !hasGarbage.containsValue(true) && !timerPrinted){
+				timerPrinted = true
+				var endTime = System.nanoTime()
+				var duration = (endTime - startTime) / 1000000.0
+				info("[GridAgent] Execution time: " + duration + " ms")
+			}
+		}
+	}
+}

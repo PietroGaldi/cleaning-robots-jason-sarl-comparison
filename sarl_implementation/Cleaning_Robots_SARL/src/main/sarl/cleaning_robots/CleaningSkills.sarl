@@ -1,0 +1,33 @@
+package cleaning_robots
+
+import io.sarl.api.core.DefaultContextInteractions
+
+capacity Cleaning{
+	def nextSlot(ag: String)
+	def moveTowards(ag: String, x: int, y: int)
+	def pickUp(ag: String)
+	def drop(ag: String)
+	def burn()
+}
+
+skill CleaningSkill implements Cleaning{
+	uses DefaultContextInteractions
+	
+	def nextSlot(ag: String){
+		emit(new NextSlotEvent(ag))
+	}
+	def moveTowards(ag : String, x : int, y : int){
+		emit(new MoveTowardsEvent(ag, x, y))
+	}
+	def pickUp(ag: String){
+		emit(new PickGarbEvent(ag))
+	}
+	
+	def drop(ag: String){
+		emit(new DropGarbEvent(ag))
+	}
+	def burn(){
+		emit(new BurnGarbEvent())
+	}
+	
+}

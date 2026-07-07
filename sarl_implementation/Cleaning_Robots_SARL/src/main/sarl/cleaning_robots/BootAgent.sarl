@@ -1,0 +1,20 @@
+package cleaning_robots
+
+import io.sarl.api.core.Lifecycle
+import io.sarl.api.core.Logging
+import io.sarl.api.core.Initialize
+
+agent BootAgent{
+	uses Lifecycle, Logging
+	
+	on Initialize {
+		info("[BootAgent] Spawning the agents")
+		spawn(typeof(GridAgent))
+		spawn(typeof(BurnerAgent), "r2")
+		spawn(typeof(CleanerAgent), "r1")
+		spawn(typeof(CleanerAgent), "r3")
+		spawn(typeof(CleanerAgent), "r4")
+		
+		killMe
+	}
+}
